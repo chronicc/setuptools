@@ -24,6 +24,7 @@ then
     fi
     sudo dpkg -i ${PKG_FILE}
     sudo apt-get install -f -y
+    pip install -U python-vagrant
 fi
 
 echo -e ""
