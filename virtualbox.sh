@@ -7,22 +7,35 @@ PKG_LATEST=$(curl ${PKG_URL} 2>/dev/null | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | s
 PKG_FILE=$(curl -sSL ${PKG_URL}/${PKG_LATEST} | sed -e 's/<[^>]*>//g' | grep -oiE "${PKG}.*${PKG_LATEST}.*${OS_CODENAME}_amd64.deb")
 PKG_INSTALLED=$(vboxmanage -v 2>/dev/null)
 
-if [[ ! "${PKG_INSTALLED}" =~ "${PKG_LATEST}" ]]; then
+if [[ ! "${PKG_INSTALLED}" =~ "${PKG_LATEST}" ]]
+then
     echo -e ""
     echo -e "Installing latest ${PKG} version ${PKG_LATEST}."
-    echo -e "For automatisation use -y as first argument."
+    echo -e "This script will prompt for sudo privileges."
+    echo -e "For automation use -y as first argument."
     echo -e "ctrl^c to abort"
-    if [[ "${1}" != "-y" ]]; then
+    if [[ "${1}" != "-y" ]]
+    then
         read
     fi
+    sudo -v
     mkdir -p /tmp/${PKG} && cd $_
-    if [[ ! -r ${PKG_FILE} ]]; then
-        wget ${PKG_URL}/${PKG_LATEST}/${PKG_FILE}
+    if [[ ! -r ${PKG_FILE} ]]
+    then
+        curl ${PKG_URL}/${PKG_LATEST}/${PKG_FILE} -O ${PKG_FILE}
     fi
     sudo dpkg -i ${PKG_FILE}
     sudo apt-get install -f -y
+    if [ $? == 0]
+    then
+        sudo usermod -aG vboxusers $(whoami)
+    fi
 fi
 
 echo -e ""
-echo "Installed version: $(vboxmanage -v)"
+echo "Installed version: $(vboxmanage -v 2>/dev/null)"
+if [[ -z $(vboxmanage -v 2>/dev/null) ]]
+then
+    exit 1
+fi
 
